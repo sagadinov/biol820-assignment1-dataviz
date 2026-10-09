@@ -1,0 +1,490 @@
+---
+title: "Assignment 1 -- Data Visualization"
+subtitle: "BIOL 520/820 Statistical Methods in Life Sciences, Fall 2026"
+author: "Group X: [member names]"
+date: "October 2026"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    fig_caption: true
+geometry: margin=2.2cm
+fontsize: 11pt
+linkcolor: blue
+urlcolor: blue
+header-includes:
+  - \usepackage{fontspec}
+  - \setmainfont{texgyretermes}[Extension=.otf, UprightFont=*-regular, BoldFont=*-bold, ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+  - \setsansfont{texgyreheros}[Extension=.otf, UprightFont=*-regular, BoldFont=*-bold, ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+  - \setmonofont{texgyrecursor}[Extension=.otf, UprightFont=*-regular, BoldFont=*-bold, ItalicFont=*-italic, BoldItalicFont=*-bolditalic, Scale=0.9]
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+  - \floatplacement{table}{H}
+  - \usepackage{booktabs}
+  - \usepackage{caption}
+  - \captionsetup{font=small, labelfont=bf, width=0.95\textwidth}
+  - \setlength{\parskip}{4pt plus 1pt}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.pos = "H",
+                      out.width = "100%", fig.align = "center")
+library(knitr)
+kb <- function(x, ...) kable(x, format = "latex", booktabs = TRUE, linesep = "", ...)
+hf_raw <- read.csv("data/raw/heart_failure_clinical_records_dataset.csv")
+rd <- function(f) read.csv(file.path("results", f), check.names = FALSE)
+cc   <- rd("ds1_class_counts.csv")
+pcv  <- rd("ds1_pca_variance.csv")
+des  <- rd("ds1_de_summary.csv"); de <- setNames(des$value, des$metric)
+clu  <- rd("ds1_heatmap_column_clusters.csv")
+mk   <- rd("ds1_marker_probes.csv")
+d2s  <- rd("ds2_summary_by_outcome.csv")
+d2n  <- rd("ds2_outcome_counts.csv")
+wt   <- rd("ds2_wilcoxon_by_outcome.csv")
+quad <- rd("ds2_quadrant_mortality.csv")
+km   <- rd("ds2_km_survival_estimates.csv")
+lr   <- readLines(file.path("results", "ds2_km_logrank.txt"))[1]
+fmtp <- function(p) ifelse(p < 0.001, "< 0.001", paste0("= ", formatC(p, format = "f", digits = 3)))
+# figures are included with absolute paths because LaTeX compiles inside report/
+options(knitr.graphics.rel_path = FALSE)
+fig <- function(f) normalizePath(file.path("figures", "pdf", f), mustWork = TRUE)
+```
+
+\newpage
+
+# Introduction
+
+Graphs are the first and often the most convincing summary of a biological dataset: they expose
+distributions, group differences, relationships and structure that a table of numbers hides.
+This report (i) introduces four graphical methods that we consider essential for the biological
+and biomedical sciences, (ii) applies them to two biomedical datasets downloaded from Kaggle,
+(iii) justifies the choice of each graph, and (iv) discusses what the graphs reveal.
+
+The two datasets were chosen deliberately to be very different in structure, so that the four
+methods could be demonstrated across the full range of data that a life-science researcher meets:
+
+* **Dataset 1** is a *high-dimensional molecular* dataset -- genome-wide gene-expression profiles
+  of 151 breast tissue samples (54,675 microarray probes) from the CuMiDa collection
+  (GEO series GSE45827).
+* **Dataset 2** is a *low-dimensional clinical* dataset -- 13 routinely recorded variables and
+  survival follow-up for 299 patients with heart failure.
+
+All analyses and graphs were produced in R 4.4.2 with the `ggplot2`, `pheatmap`, `patchwork` and
+`survival` packages. The complete, reproducible code (download script, analysis scripts and this
+R Markdown report) is available in the group's GitHub repository (see Section 6). Every figure is
+provided as a vector PDF and a 300-dpi PNG in the `figures/` folder of the repository.
+
+# Four essential graphical methods for the biological sciences
+
+## Box plots and violin plots
+
+The box plot (Tukey, 1977) summarises the distribution of a continuous variable with five
+numbers -- median, first and third quartiles (the box, spanning the inter-quartile range, IQR),
+and whiskers extending to the most extreme values within 1.5 IQR -- and marks outliers
+individually. The violin plot (Hintze & Nelson, 1998) adds a mirrored kernel-density estimate so
+that the *shape* of the distribution (skewness, bimodality) becomes visible. Placed side by side,
+boxes or violins are the standard way to compare a measurement between experimental groups
+(treatment vs control, genotypes, disease subtypes) and they are the natural graphical companion
+of the t-test, Mann--Whitney test, ANOVA and Kruskal--Wallis test. Weissgerber et al. (2015)
+argue that, for the small samples typical of biology, box/violin plots with the individual data
+points overlaid should replace bar charts with error bars, which hide the distribution and the
+sample size. We follow that recommendation throughout this report: every violin is combined with
+a box and the raw data points.
+
+## Scatter plots (including PCA score plots and volcano plots)
+
+The scatter plot displays the joint distribution of two continuous variables, one per axis, and
+is the basis for correlation and regression analysis. A third variable can be encoded by colour
+or shape, and a smoothing line or regression line can be added. Two specialised scatter plots are
+ubiquitous in modern biology. (i) The *principal component analysis (PCA) score plot* shows
+samples in the plane of the first two principal components -- linear combinations of thousands of
+variables that capture the largest share of the variance (Ringnér, 2008); it is the first graph
+drawn for any omics dataset to check whether samples group by biology or by technical batch.
+(ii) The *volcano plot* (Cui & Churchill, 2003) plots, for every gene, the effect size
+(log~2~ fold change) against statistical significance ($-\log_{10} p$), so that thousands of
+hypothesis tests can be inspected at once and the genes that are both strongly and significantly
+changed stand out in the upper corners.
+
+## Heatmaps with hierarchical clustering
+
+A heatmap represents a numerical matrix as a grid of coloured cells. In genomics the rows are
+genes, the columns are samples, and rows and columns are re-ordered by hierarchical clustering,
+whose dendrograms are drawn along the margins (Eisen et al., 1998; Wilkinson & Friendly, 2009).
+Row-wise standardisation (z-scores) lets genes with very different absolute expression share one
+colour scale. Annotation bars along the columns (e.g. subtype, treatment) make it possible to
+judge, at a glance, whether unsupervised clustering recovers known biological groups. The same
+graph type is used, with a diverging colour scale, to display correlation matrices between
+clinical variables. Heatmaps have very high information density -- in Figure 2 of this report a
+single page shows 75,500 measurements.
+
+## Kaplan--Meier survival curves
+
+Time-to-event data (death, relapse, germination, metamorphosis) are *censored* when the event
+has not happened by the end of follow-up. The Kaplan--Meier estimator (Kaplan & Meier, 1958)
+accounts for censoring and estimates the probability of remaining event-free as a step function
+of time. Plotting one curve per group, with confidence bands, censoring marks and a "number at
+risk" table underneath, is the standard graphical method in clinical and ecological survival
+studies (Rich et al., 2010), and the log-rank test provides the accompanying significance test.
+Because the course covers survival analysis later in the semester, this method also serves as a
+preview of that topic.
+
+## Design principles applied to every figure
+
+All figures share a common design: thin marks, light solid grid lines, a legend plus direct
+labels wherever a figure has several groups, and an explicit sample size. Colours come from a
+single categorical palette that was checked for distinguishability under red--green colour
+blindness (Wong, 2011); where two adjacent hues are close, a second channel (point shape,
+line type or a text label) carries the group identity as well, so no information is encoded by
+colour alone. Magnitudes use a single-hue blue ramp and polarities (z-scores, correlations,
+fold changes) use a blue--grey--red diverging scale.
+
+# Dataset 1: breast cancer gene expression (CuMiDa, GSE45827)
+
+## Description of the dataset
+
+**Source.** Kaggle dataset *Breast Cancer Gene Expression -- CuMiDa*
+(https://www.kaggle.com/datasets/brunogrisci/breast-cancer-gene-expression-cumida), file
+`Breast_GSE45827.csv`. CuMiDa (Curated Microarray Database; Feltes et al., 2019) is a collection
+of 78 carefully re-processed cancer microarray datasets from NCBI GEO. This dataset corresponds
+to GEO series GSE45827 (Gruosso et al., 2016), in which breast tumours from the Institut Curie
+were profiled on the Affymetrix Human Genome U133 Plus 2.0 array (platform GPL570). CuMiDa
+applied background correction, quantile normalisation and log~2~ transformation (RMA), removed
+poor-quality arrays and kept the original class labels.
+
+**Structure.** The data frame has `r cc$n |> sum()` rows (samples) and 54,677 columns: `samples`
+(a numeric sample index assigned by CuMiDa), `type` (class label) and 54,675 numeric columns, one per probe set
+(e.g. `1007_s_at`), holding log~2~ expression values between 2.2 and 15.0. The six classes are the
+intrinsic molecular subtypes of breast cancer (Perou et al., 2000; Sørlie et al., 2001)
+plus normal breast tissue and breast cancer cell lines (Table 1). The first rows and columns of the
+data frame are shown in Table 2. For gene names we joined the probe identifiers to the NCBI GEO
+annotation of platform GPL570 (Edgar et al., 2002).
+
+```{r ds1-tab1}
+cc2 <- cc; names(cc2) <- c("Class (type column)", "Samples")
+cc2$`Biological meaning` <- c("Histologically normal breast tissue",
+  "Oestrogen-receptor-positive tumours, low proliferation",
+  "Oestrogen-receptor-positive tumours, higher proliferation / HER2",
+  "HER2 (ERBB2)-amplified, oestrogen-receptor-negative tumours",
+  "Triple-negative tumours expressing basal cytokeratins",
+  "Established breast cancer cell lines grown in vitro")
+kb(cc2, caption = "Classes in the CuMiDa GSE45827 dataset.")
+```
+
+```{r ds1-tab2}
+d1 <- data.table::fread("data/raw/Breast_GSE45827.csv", select = 1:7, nrows = 6)
+kb(d1, digits = 2, caption = "First six rows and seven columns of the data frame (151 x 54,677).")
+```
+
+## Figure 1 -- PCA score plot with scree plot
+
+**Why this graph.** With 54,675 variables per sample no pairwise scatter plot can summarise the
+data; PCA compresses the 2,000 most variable probes into a few components and the score plot shows
+the samples in the plane that captures most of their variance. It answers the first question one
+asks of such data -- *do the samples group according to their biological class?* -- and reveals
+outliers or batch effects. Colour and point shape both encode the subtype, 95 % normal-probability
+ellipses summarise each group, and each group is labelled directly with its sample size. The
+scree panel reports how much variance the displayed components capture, which is essential for
+interpreting distances in the plot.
+
+```{r fig1, fig.cap="PCA of the 2,000 most variable probes (n = 151). Left: scores on the first two principal components, coloured and shaped by class, with 95 % normal-probability ellipses and group centroids. Right: variance explained by the first ten components."}
+include_graphics(fig("fig1_1_pca.pdf"))
+```
+
+**Findings.** The first two components explain `r sprintf("%.1f", 100*pcv$variance_explained[1])` %
+and `r sprintf("%.1f", 100*pcv$variance_explained[2])` % of the variance
+(`r sprintf("%.1f", 100*pcv$cumulative[2])` % together), and the samples are clearly organised by
+class. The cell lines are the most distinct group: they sit alone at strongly negative PC1 and
+PC2 scores, far from every tissue sample, because cultured cells lack the stromal, vascular and
+immune cells that contribute to a tumour's expression profile. Among the tissues, PC1 runs from
+basal-like tumours (negative scores) to luminal A tumours (positive scores), i.e. it is an
+oestrogen-receptor / luminal-differentiation axis; PC2 separates basal-like tumours (high) from
+the luminal and normal samples. Luminal B and HER2-enriched tumours occupy the middle of the plot
+and their ellipses overlap each other and that of luminal A, which agrees with the biology: both
+are more proliferative than luminal A and a subset of luminal B tumours is HER2-positive. The
+seven normal samples lie next to the luminal tumours, as expected for oestrogen-receptor-positive
+epithelium. The scree plot shows a steep drop after PC2, so the two components displayed carry
+most of the structured variation, although PC3--PC5 still contribute 4--7 % each.
+
+## Figure 2 -- Clustered heatmap of the 500 most variable probes
+
+**Why this graph.** Figure 1 shows *that* the groups differ; the heatmap shows *which genes*
+drive the differences and whether the structure is recovered without using the labels. The 500
+most variable probes are z-scored per probe and clustered in both dimensions (Ward's method;
+correlation distance for samples). Three annotation tracks -- the subtype and the expression of
+three classic markers (ESR1, ERBB2, KRT5) -- allow the sample dendrogram to be compared with the
+known biology, and a selection of marker genes is labelled along the rows. The abbreviated class
+code of every sample is printed under its column so that the subtype is readable even without
+the colour bar.
+
+```{r fig2, fig.cap="Heatmap of row-standardised expression (z-scores, clipped at ±3) for the 500 most variable probes across 151 samples. Rows and columns are ordered by hierarchical clustering (Ward.D2). Column annotation tracks: subtype, and log2 expression of ESR1, ERBB2 and KRT5. Selected marker genes are labelled on the right; column labels give the class (N normal, LA luminal A, LB luminal B, H2 HER2-enriched, B basal-like, CL cell line)."}
+include_graphics(fig("fig1_2_heatmap.pdf"))
+```
+
+```{r ds1-tab3}
+clu2 <- clu; names(clu2)[1] <- "Cluster"
+kb(clu2, caption = "Composition of the six sample clusters obtained by cutting the column dendrogram of Figure 2 (rows = clusters, columns = true class).")
+```
+
+**Findings.** Unsupervised clustering reproduces the classes remarkably well. Cutting the sample
+dendrogram into six clusters (Table 3) places 129 of 151 samples (85 %) in a cluster dominated by
+their own class: the cell lines (14/14) and normal tissues (7/7) form pure clusters, 38 of 41
+basal-like tumours cluster together, and luminal A (28/29) separates from luminal B (23/30). The
+only substantial mixing is between luminal B and HER2-enriched tumours, exactly the two groups
+whose ellipses overlapped in Figure 1. The gene blocks explain why. A large *luminal* block (ESR1,
+PGR, FOXA1, GATA3, XBP1, TFF1, AGR2, CA12, NAT1, ANKRD30A) is high (red) in luminal A/B and normal
+samples and low in basal-like tumours and cell lines; a *basal* block (KRT5, KRT14, KRT17, FOXC1,
+GABRP, ELF5, SFRP1) is high in basal-like tumours and, interestingly, in normal tissue, which
+contains basal/myoepithelial cells; the *ERBB2 amplicon* (ERBB2) lights up in the HER2-enriched
+cluster and in about half of the luminal B tumours; and a *proliferation* block (TOP2A, CDC20,
+CCNB1) is low in normal and luminal A samples and high in basal-like, HER2-enriched and luminal B
+tumours. Finally, the cell lines show a large block of genes that is uniformly low -- transcripts
+of stromal and immune origin that are absent from pure cell cultures -- which is why they were so
+distant in the PCA.
+
+## Figure 3 -- Volcano plot, basal-like versus luminal A
+
+**Why this graph.** The two most different tumour classes in Figures 1--2 are basal-like and
+luminal A. To identify the individual genes behind this difference we performed a Welch two-sample
+t-test (Welch, 1947) for every probe and corrected for multiple testing with the
+Benjamini--Hochberg false-discovery rate (FDR; Benjamini & Hochberg, 1995). A volcano plot is the
+only practical way to show the results of 54,675 simultaneous tests: it displays effect size and
+significance together, the thresholds are drawn explicitly, non-significant probes are greyed out,
+and the most significant genes in each direction are labelled.
+
+```{r fig3, fig.cap="Volcano plot of the Welch t-test comparing basal-like (n = 41) with luminal A (n = 29) tumours for all 54,675 probes. Red: higher in basal-like; blue: higher in luminal A (FDR < 0.05 and absolute log2 fold change at least 1); grey: not significant. The 12 most significant genes in each direction are labelled."}
+include_graphics(fig("fig1_3_volcano.pdf"))
+```
+
+**Findings.** `r format(de[["n_higher_basal"]], big.mark=",")` probes are significantly higher in
+basal-like tumours and `r format(de[["n_higher_luminalA"]], big.mark=",")` are higher in luminal A
+tumours (FDR < 0.05 and at least a two-fold change), i.e. about 7 % of the transcriptome differs
+between the two subtypes. The plot is strongly asymmetric. On the luminal A side the fold changes
+are very large (down to log~2~FC = -7.3 for AGR3, i.e. a 150-fold difference) and the labelled genes
+are a textbook list of oestrogen-regulated and luminal-lineage genes: ESR1 itself, FOXA1, AR, AGR3,
+CA12, TBC1D9, MLPH, AFF3, PRR15, SLC7A8, MAPT and IL6ST. These genes are effectively switched off
+in basal-like tumours. On the basal-like side the fold changes are more moderate (up to log~2~FC
+= 4.5 for CDCA7) and the most significant genes are almost all cell-cycle and mitosis genes --
+MCM10, KIF14, CCNA2, EXO1, KIF2C, ANLN, GTSE1, AURKB, CENPE, DEPDC1 and DEK -- reflecting the much
+higher proliferation rate of basal-like tumours rather than a lineage programme. The volcano plot
+therefore tells a biologically coherent story in one picture: basal-like tumours lack the
+hormone-receptor programme and over-run the cell-cycle programme.
+
+## Figure 4 -- Marker-gene expression by subtype (violin and box plots)
+
+**Why this graph.** Clinicians classify breast tumours by the oestrogen receptor (ESR1),
+progesterone receptor (PGR), HER2 (ERBB2), basal cytokeratins (KRT5, KRT17) and the proliferation
+marker Ki-67 (MKI67). Showing the full distribution of each marker in each class -- violin for the
+shape, box for the median and IQR, points for every sample -- tests whether the molecular classes
+of the dataset behave as the clinical definitions predict, and it reveals bimodality that a bar
+chart would hide. A Kruskal--Wallis test across the five tissue classes accompanies each panel.
+
+```{r fig4, fig.cap="Expression of six clinical marker genes in the six classes (one probe per gene, chosen as the probe with the highest mean expression). Violin = kernel density, box = median and inter-quartile range, points = individual samples. Kruskal--Wallis tests compare the five tissue classes (cell lines excluded)."}
+include_graphics(fig("fig1_4_marker_violins.pdf"))
+```
+
+**Findings.** All six markers differ between classes (Kruskal--Wallis p < 0.001 in every panel),
+and the pattern of each follows its clinical definition. ESR1 is high and tightly distributed in
+luminal A and luminal B tumours (medians about 11.5--12 on the log~2~ scale), intermediate in
+normal tissue and low (about 5.5) in HER2-enriched, basal-like tumours and cell lines; this is the
+single gene that best explains PC1 of Figure 1. PGR follows ESR1 but with a wide, bimodal
+distribution in luminal B, showing that many luminal B tumours have lost progesterone-receptor
+expression. ERBB2 is uniformly very high (about 13.5) in the HER2-enriched class and bimodal in
+luminal B, where roughly half the tumours show amplification-level expression -- the molecular
+basis of the luminal B / HER2 mixing seen in Figures 1 and 2. The basal cytokeratins KRT5 and
+KRT17 are highest, and least variable, in *normal* tissue (which contains a basal/myoepithelial
+cell layer), broadly spread in basal-like tumours and cell lines, and low in luminal tumours.
+MKI67 increases monotonically from normal tissue (about 5) through luminal A (5.3), luminal B (7)
+and HER2-enriched (7.5) to basal-like tumours (8.2); this proliferation gradient mirrors the
+increasing histological grade and worse prognosis of these subtypes and complements the cell-cycle
+signal of Figure 3.
+
+# Dataset 2: heart failure clinical records
+
+## Description of the dataset
+
+**Source.** Kaggle dataset *Heart Failure Prediction*
+(https://www.kaggle.com/datasets/andrewmvd/heart-failure-clinical-data), file
+`heart_failure_clinical_records_dataset.csv`; also distributed by the UCI Machine Learning
+Repository. The data were collected at the Faisalabad Institute of Cardiology and Allied Hospital
+(Pakistan) in 2015 and first described by Ahmad et al. (2017); Chicco & Jurman (2020) used them to
+show that serum creatinine and ejection fraction alone predict survival.
+
+**Structure.** The data frame has 299 rows (patients with left-ventricular systolic dysfunction,
+NYHA class III--IV) and 13 columns (Table 4): 7 continuous clinical measurements, 5 binary
+risk factors and the follow-up outcome (`DEATH_EVENT`, with `time` the follow-up period in days).
+`r d2n$n[2]` patients (`r sprintf("%.0f", 100*d2n$n[2]/sum(d2n$n))` %) died during a median follow-up
+of `r median(hf_raw$time)` days (range `r min(hf_raw$time)`--`r max(hf_raw$time)`). Table 5 shows the first rows and Table 6 summarises every variable by outcome.
+
+```{r ds2-tab4}
+vars <- data.frame(
+  Variable = c("age", "anaemia", "creatinine_phosphokinase", "diabetes", "ejection_fraction",
+               "high_blood_pressure", "platelets", "serum_creatinine", "serum_sodium", "sex",
+               "smoking", "time", "DEATH_EVENT"),
+  Type = c("continuous", "binary", "continuous", "binary", "continuous", "binary", "continuous",
+           "continuous", "continuous", "binary", "binary", "continuous", "binary"),
+  Description = c("Age of the patient (years)", "Decrease of red blood cells / haemoglobin (0/1)",
+                  "Level of the CPK enzyme in the blood (mcg/L)", "Diabetes (0/1)",
+                  "Percentage of blood leaving the heart at each contraction (%)",
+                  "Hypertension (0/1)", "Platelets in the blood (kiloplatelets/mL)",
+                  "Level of creatinine in the blood (mg/dL)", "Level of sodium in the blood (mEq/L)",
+                  "Woman (0) or man (1)", "Smoker (0/1)", "Follow-up period (days)",
+                  "Death during the follow-up period (0/1) -- outcome"))
+kb(vars, caption = "Variables of the heart failure clinical records dataset (descriptions after Chicco \\& Jurman, 2020).")
+```
+
+```{r ds2-tab5}
+d2t <- t(head(hf_raw, 6)); colnames(d2t) <- paste("Patient", 1:6)
+d2t <- matrix(formatC(d2t, format = "fg", big.mark = ","), nrow(d2t), dimnames = dimnames(d2t))
+kb(d2t, caption = "First six rows of the data frame (299 x 13), shown transposed: one column per patient.")
+```
+
+```{r ds2-tab6}
+d2s2 <- d2s[, c("variable", "type", "Survived", "Died")]
+d2s2$variable <- c("Age (years)", "CPK (mcg/L)", "Ejection fraction (%)", "Platelets (thousands/µL)",
+                   "Serum creatinine (mg/dL)", "Serum sodium (mEq/L)", "Follow-up time (days)",
+                   "Anaemia", "Diabetes", "High blood pressure", "Sex (male)", "Smoking")[match(d2s$variable, c("age","creatinine_phosphokinase","ejection_fraction","platelets","serum_creatinine","serum_sodium","time","anaemia","diabetes","high_blood_pressure","sex","smoking"))]
+names(d2s2) <- c("Variable", "Statistic", sprintf("Survived (n = %d)", d2n$n[1]), sprintf("Died (n = %d)", d2n$n[2]))
+kb(d2s2, caption = "Descriptive statistics by outcome: median [inter-quartile range] for continuous variables, n (\\%) for binary variables (for sex: n (\\%) male).")
+```
+
+## Figure 5 -- Clinical variables by outcome (violin and box plots)
+
+**Why this graph.** The central question of the dataset is which measurements differ between
+patients who died and patients who survived. Small-multiple violin/box plots with the individual
+patients overlaid show, for all seven continuous variables on one page, the location, spread,
+shape and sample size of each group, and a Mann--Whitney U test per panel quantifies the
+difference. Two strongly right-skewed laboratory values (creatinine phosphokinase and serum
+creatinine) are shown on a log~10~ scale so that their distributions are not compressed by a few
+extreme patients.
+
+```{r fig5, fig.cap="Distribution of the seven continuous variables in survivors (blue) and patients who died (orange). Violin = kernel density, box = median and IQR, points = patients; p-values from two-sided Mann--Whitney U tests."}
+include_graphics(fig("fig2_1_clinical_violins.pdf"))
+```
+
+**Findings.** Five of the seven variables differ clearly between the two outcomes (Mann--Whitney p < 0.001 in every case). Patients who died were older (median 65 vs 60 years), had a lower ejection fraction (30 % vs 38 %), higher serum creatinine (1.3 vs 1.0 mg/dL, with a long right tail reaching 9.4 mg/dL) and lower serum sodium (135.5 vs 137 mEq/L). Creatinine phosphokinase (p = 0.68) and platelet count (p = 0.43) do not differ at all -- their violins are essentially superimposed -- so these two laboratory values carry no prognostic information in this cohort. The violins also reveal features that a box plot alone would hide: ejection fraction is multimodal because clinicians record it in round numbers (25, 30, 35, 38, 40, 45, 60 %), and serum creatinine is so right-skewed that the log scale was necessary. Finally, follow-up time is much shorter for patients who died (median 44.5 vs 172 days). This is not a risk factor but a consequence of the outcome -- a patient who dies leaves the study early -- and it motivates the survival analysis of Figure 7, which uses time correctly as part of the outcome rather than as a predictor. The binary variables (Table 6) differ little: anaemia (48 % vs 41 %) and hypertension (41 % vs 33 %) are slightly more frequent among the deceased, while diabetes, sex and smoking are identical.
+
+## Figure 6 -- Ejection fraction versus serum creatinine (scatter plot with marginal densities)
+
+**Why this graph.** Figure 5 examines one variable at a time; the scatter plot shows how the two
+most informative variables act *together*. Each patient is a point, the outcome is encoded by
+colour and shape, serum creatinine is plotted on a log scale, and clinical cut-offs (ejection
+fraction 40 %, the upper limit of "reduced" ejection fraction in the ESC guidelines, McDonagh et
+al., 2021; serum creatinine 1.5 mg/dL as a marker of renal impairment) divide the plane into four
+quadrants whose mortality is printed directly on the graph. Marginal density curves show the
+distribution of each variable by outcome, so the figure combines the information of two violin
+plots and a scatter plot.
+
+```{r fig6, fig.cap="Ejection fraction against serum creatinine (log scale) for 299 patients, coloured and shaped by outcome, with the mortality of each quadrant defined by the clinical cut-offs (dashed lines) and marginal kernel densities by outcome."}
+include_graphics(fig("fig2_2_scatter_ef_creat.pdf"))
+```
+
+**Findings.** The two variables divide the cohort into regions of very different risk. Among the 56 patients with both a reduced ejection fraction (at most 40 %) and a raised serum creatinine (above 1.5 mg/dL), 37 died (66 %); among the 69 patients with neither risk factor only 13 died (19 %), a 3.5-fold difference. A single risk factor gives intermediate mortality: 25 % (40/163) for low ejection fraction alone and 55 % (6/11) for raised creatinine alone, although the latter group is too small for a precise estimate. The marginal densities show the same separation from a different angle: the deaths peak at an ejection fraction of 20--30 %, whereas the survivors peak at 35--40 % and have a second mode near 60 %; the creatinine density of the deceased is shifted upwards and has a heavy tail. The scatter also shows that the two variables are almost uncorrelated with each other (Spearman $\rho$ = -0.18, Figure 8), i.e. they carry independent information -- which explains why Chicco & Jurman (2020) found that these two measurements alone predict survival about as well as all 12 variables together. Vertical stripes of points are a visible artefact of ejection fraction being recorded in round numbers.
+
+## Figure 7 -- Kaplan--Meier survival curves by ejection fraction
+
+**Why this graph.** The outcome variable is a *time to event* with censoring (patients still
+alive at the end of their follow-up), so comparing raw death proportions ignores the differing
+follow-up times visible in Figure 5. Kaplan--Meier curves use all the information: they show, for
+each ejection-fraction band, the estimated probability of surviving beyond each day, with 95 %
+confidence bands, censoring marks and the number of patients still at risk. The log-rank test
+compares the curves. The three bands are ordered, so they are coloured with a light-to-dark ramp
+of one hue and additionally distinguished by line type and direct labels.
+
+```{r fig7, fig.cap="Kaplan--Meier survival estimates for patients with ejection fraction at most 30 %, 31--40 % and above 40 %, with 95 % confidence bands, censoring marks (+) and the number of patients at risk every 40 days."}
+include_graphics(fig("fig2_3_km_ejection.pdf"))
+```
+
+**Findings.** Survival differs strongly between the ejection-fraction bands (log-rank $\chi^2$ = 31.3, df = 2, p < 0.001). Patients with a severely reduced ejection fraction (at most 30 %; n = 93, 51 deaths) have an estimated survival of 62 % at 90 days, 44 % at 180 days and 23 % at 270 days, with a median survival of 170 days (95 % CI 111--214 days). The two other bands fare much better and are indistinguishable from each other: 84 % and 80 % survival at 90 days, 77 % and 72 % at 180 days for ejection fractions of 31--40 % (n = 126, 26 deaths) and above 40 % (n = 80, 19 deaths), and neither reaches its median. The relationship is therefore not linear -- the excess risk is concentrated in the group with severely reduced ejection fraction, while a "preserved" ejection fraction above 40 % confers no additional benefit in this cohort of patients who all had advanced (NYHA III--IV) heart failure. Two features of the graph warn against over-interpretation: the confidence bands widen and the number at risk falls below 30 per group after 160 days, so the late parts of the curves are imprecise; and the censoring marks are spread over the whole follow-up period, consistent with staggered enrolment rather than loss to follow-up.
+
+## Figure 8 -- Correlation heatmap of all variables
+
+**Why this graph.** With 13 variables there are 78 pairwise relationships; a correlation
+heatmap shows them all on one page, which is impossible with scatter plots. Spearman's rank
+correlation was used because several variables are skewed or binary, the lower triangle only is
+drawn to avoid redundancy, the coefficients are printed in the cells and significant ones are
+starred, and a blue--grey--red diverging scale makes the sign and strength immediately visible.
+This graph is the usual first step before building a multiple regression model, because it
+reveals collinearity between predictors.
+
+```{r fig8, fig.cap="Spearman rank correlations between all 13 variables (binary variables coded 0/1). * p < 0.05."}
+include_graphics(fig("fig2_4_corr_heatmap.pdf"))
+```
+
+**Findings.** The predictors are only weakly correlated with each other. The strongest associations among them are sex with smoking ($\rho$ = 0.45: nearly all smokers are men), serum sodium with serum creatinine ($\rho$ = -0.30) and age with serum creatinine ($\rho$ = 0.27); every other pair has |$\rho$| below 0.25. There is thus little collinearity, which is favourable for the multiple regression and logistic regression models covered later in the course. With the death event the strongest correlation is follow-up time ($\rho$ = -0.54), but, as discussed for Figure 5, this is a consequence of dying early and must not be used as a predictor; the genuine prognostic variables are serum creatinine ($\rho$ = 0.37), ejection fraction ($\rho$ = -0.29), age ($\rho$ = 0.22) and serum sodium ($\rho$ = -0.21), all significant at p < 0.05, while the five binary risk factors (anaemia, diabetes, hypertension, sex, smoking) have |$\rho$| below 0.1 and carry almost no information about the outcome. The heatmap therefore summarises in one picture what Figures 5--7 showed in detail and agrees with the published conclusion of Chicco & Jurman (2020) that creatinine and ejection fraction are the dominant predictors in this dataset.
+
+# Conclusions
+
+Four graphical methods were sufficient to explore two very different biomedical datasets in
+depth. For the high-dimensional expression data, the PCA score plot and the clustered heatmap
+showed that the intrinsic breast cancer subtypes are recovered from the data alone, the volcano
+plot identified the hormone-receptor and cell-cycle programmes that separate basal-like from
+luminal A tumours, and the marker-gene violins confirmed that the molecular classes obey their
+clinical definitions. For the clinical data, violin plots, a scatter plot with quadrant
+mortality, Kaplan--Meier curves and a correlation heatmap all converged on the same conclusion
+reached by Chicco & Jurman (2020): low ejection fraction and high serum creatinine are the
+dominant correlates of death in this cohort, while most other recorded variables carry little
+information. In every case the choice of graph followed from the structure of the data (number of
+variables, type of outcome, presence of censoring) and from the question being asked, and
+combining several encodings -- colour, shape, direct labels, marginal distributions, printed
+statistics -- allowed each figure to carry a high density of information while remaining legible.
+
+# Software and reproducibility
+
+Analyses were performed in R 4.4.2 (R Core Team, 2024) with ggplot2 (Wickham, 2016), patchwork,
+ggrepel, pheatmap (Kolde, 2019), survival (Therneau, 2024), dplyr, tidyr and data.table; this report
+was written in R Markdown and compiled with knitr and pandoc. All scripts, the figures (PDF and
+PNG) and the result tables are available in the group's GitHub repository:
+https://github.com/sagadinov/biol820-assignment1-dataviz. Running `bash scripts/run_all.sh` downloads
+the data, regenerates every figure and rebuilds this PDF.
+
+# References {-}
+
+Ahmad, T., Munir, A., Bhatti, S. H., Aftab, M., & Raza, M. A. (2017). Survival analysis of heart failure patients: A case study. *PLoS ONE, 12*(7), e0181001. https://doi.org/10.1371/journal.pone.0181001
+
+Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery rate: A practical and powerful approach to multiple testing. *Journal of the Royal Statistical Society: Series B, 57*(1), 289--300.
+
+Chicco, D., & Jurman, G. (2020). Machine learning can predict survival of patients with heart failure from serum creatinine and ejection fraction alone. *BMC Medical Informatics and Decision Making, 20*, 16. https://doi.org/10.1186/s12911-020-1023-5
+
+Cui, X., & Churchill, G. A. (2003). Statistical tests for differential expression in cDNA microarray experiments. *Genome Biology, 4*(4), 210.
+
+Edgar, R., Domrachev, M., & Lash, A. E. (2002). Gene Expression Omnibus: NCBI gene expression and hybridization array data repository. *Nucleic Acids Research, 30*(1), 207--210.
+
+Eisen, M. B., Spellman, P. T., Brown, P. O., & Botstein, D. (1998). Cluster analysis and display of genome-wide expression patterns. *Proceedings of the National Academy of Sciences, 95*(25), 14863--14868.
+
+Feltes, B. C., Chandelier, E. B., Grisci, B. I., & Dorn, M. (2019). CuMiDa: An extensively curated microarray database for benchmarking and testing of machine learning approaches in cancer research. *Journal of Computational Biology, 26*(4), 376--386. https://doi.org/10.1089/cmb.2018.0238
+
+Gruosso, T., Mieulet, V., Cardon, M., Bourachot, B., Kieffer, Y., Devun, F., Dubois, T., Dutreix, M., Vincent-Salomon, A., Miller, K. M., & Mechta-Grigoriou, F. (2016). Chronic oxidative stress promotes H2AX protein degradation and enhances chemosensitivity in breast cancer patients. *EMBO Molecular Medicine, 8*(5), 527--549. (GEO accession GSE45827.)
+
+Hintze, J. L., & Nelson, R. D. (1998). Violin plots: A box plot--density trace synergism. *The American Statistician, 52*(2), 181--184.
+
+Kaplan, E. L., & Meier, P. (1958). Nonparametric estimation from incomplete observations. *Journal of the American Statistical Association, 53*(282), 457--481.
+
+Kolde, R. (2019). *pheatmap: Pretty heatmaps* (R package version 1.0.12). https://CRAN.R-project.org/package=pheatmap
+
+McDonagh, T. A., Metra, M., Adamo, M., et al. (2021). 2021 ESC Guidelines for the diagnosis and treatment of acute and chronic heart failure. *European Heart Journal, 42*(36), 3599--3726.
+
+Perou, C. M., Sørlie, T., Eisen, M. B., et al. (2000). Molecular portraits of human breast tumours. *Nature, 406*(6797), 747--752.
+
+R Core Team. (2024). *R: A language and environment for statistical computing*. R Foundation for Statistical Computing, Vienna, Austria. https://www.R-project.org/
+
+Rich, J. T., Neely, J. G., Paniello, R. C., Voelker, C. C. J., Nussenbaum, B., & Wang, E. W. (2010). A practical guide to understanding Kaplan--Meier curves. *Otolaryngology--Head and Neck Surgery, 143*(3), 331--336.
+
+Ringnér, M. (2008). What is principal component analysis? *Nature Biotechnology, 26*(3), 303--304.
+
+Sørlie, T., Perou, C. M., Tibshirani, R., et al. (2001). Gene expression patterns of breast carcinomas distinguish tumor subclasses with clinical implications. *Proceedings of the National Academy of Sciences, 98*(19), 10869--10874.
+
+Therneau, T. M. (2024). *A package for survival analysis in R* (R package `survival`). https://CRAN.R-project.org/package=survival
+
+Tukey, J. W. (1977). *Exploratory data analysis*. Addison-Wesley.
+
+Weissgerber, T. L., Milic, N. M., Winham, S. J., & Garovic, V. D. (2015). Beyond bar and line graphs: Time for a new data presentation paradigm. *PLoS Biology, 13*(4), e1002128.
+
+Welch, B. L. (1947). The generalization of "Student's" problem when several different population variances are involved. *Biometrika, 34*(1--2), 28--35.
+
+Wickham, H. (2016). *ggplot2: Elegant graphics for data analysis*. Springer-Verlag New York.
+
+Wilkinson, L., & Friendly, M. (2009). The history of the cluster heat map. *The American Statistician, 63*(2), 179--184.
+
+Wong, B. (2011). Points of view: Color blindness. *Nature Methods, 8*(6), 441.

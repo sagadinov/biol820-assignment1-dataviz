@@ -1,0 +1,18 @@
+# Raw data is downloaded by scripts/00_download_data.sh (the CuMiDa file is ~140 MB,
+# above GitHub's 100 MB limit), so it is not versioned.
+data/raw/*
+!data/raw/.gitkeep
+
+# R / R Markdown intermediates
+.Rhistory
+.RData
+.Rproj.user/
+report/*_files/
+report/*.tex
+report/*.log
+report/*.aux
+report/*.out
+report/*.toc
+report/*.knit.md
+report/*.utf8.md
+*.DS_Store

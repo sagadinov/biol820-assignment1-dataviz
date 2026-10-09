@@ -1,0 +1,7 @@
+gene,probe,role
+ESR1,205225_at,Oestrogen receptor (luminal marker)
+PGR,228554_at,Progesterone receptor (luminal marker)
+ERBB2,216836_s_at,HER2 receptor (HER2-enriched marker)
+KRT5,201820_at,Cytokeratin 5 (basal marker)
+KRT17,212236_x_at,Cytokeratin 17 (basal marker)
+MKI67,212022_s_at,Ki-67 (proliferation)
