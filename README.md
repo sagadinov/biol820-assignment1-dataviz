@@ -30,12 +30,12 @@ Each figure is saved as a vector PDF in `figures/pdf/` and a 300-dpi PNG in `fig
 scripts/00_download_data.sh   download both datasets (Kaggle CLI if configured, otherwise public mirrors)
 scripts/01_cumida_breast.R    dataset 1: histogram, box plots, scatter + regression, Q-Q plots
 scripts/02_liver_patients.R   dataset 2: histogram, box plots, scatter + regression, Q-Q plots
-scripts/03_render_report.R    knit report/report.Rmd -> report/Group_X.docx and report/Group_X.pdf
+scripts/03_render_report.R    knit report/report.Rmd -> report/Group 5.docx and report/Group 5.pdf
 scripts/utils/theme.R         colours, ggplot2 theme, save_fig()
 scripts/run_all.sh            run everything in order
 figures/pdf, figures/png      the figures
 results/                      descriptive tables, test output (Shapiro-Wilk, correlation, regression)
-report/report.Rmd             report source; Group_X.docx (editable) and Group_X.pdf (submission)
+report/report.Rmd             report source; Group 5.docx (editable) and Group 5.pdf (submission)
 data/raw/                     downloaded data (git-ignored; see data/README.md)
 ```
 
@@ -48,6 +48,7 @@ bash scripts/run_all.sh
 
 ## Submission notes
 
-* Fill in the group number and member names in the YAML header of `report/report.Rmd`, re-run
-  `scripts/03_render_report.R`, and rename `Group_X.pdf` to your group number before uploading to Moodle.
-* `Group_X.docx` is the same report in Word format for editing.
+* Group 5: Sagyndyk Sagadinov, Artur Kovenskiy, Aloise Koome Munene, Alikhan Zhanapov.
+* `report/Group 5.pdf` is the file to upload to Moodle; `report/Group 5.docx` is the same report in Word
+  format for editing. To change the text, edit `report/report.Rmd` (or the DOCX directly) and re-run
+  `scripts/03_render_report.R`.

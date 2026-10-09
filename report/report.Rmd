@@ -1,7 +1,7 @@
 ---
 title: "Assignment 1 -- Data Visualization"
 subtitle: "BIOL 520/820 Statistical Methods in Life Sciences, Fall 2026"
-author: "Group X: [member names]"
+author: "Group 5: Sagyndyk Sagadinov, Artur Kovenskiy, Aloise Koome Munene, Alikhan Zhanapov"
 date: "October 2026"
 output:
   word_document:

@@ -7,8 +7,8 @@ extra <- extra[dir.exists(extra)]
 if (length(extra)) Sys.setenv(PATH = paste(c(extra, Sys.getenv("PATH")), collapse = .Platform$path.sep))
 options(bitmapType = "cairo")
 rmd <- file.path(root, "report", "report.Rmd")
-rmarkdown::render(rmd, output_format = "word_document", output_file = "Group_X.docx",
+rmarkdown::render(rmd, output_format = "word_document", output_file = "Group 5.docx",
                   output_dir = file.path(root, "report"), knit_root_dir = root, quiet = TRUE)
-rmarkdown::render(rmd, output_format = "pdf_document", output_file = "Group_X.pdf",
+rmarkdown::render(rmd, output_format = "pdf_document", output_file = "Group 5.pdf",
                   output_dir = file.path(root, "report"), knit_root_dir = root, quiet = TRUE)
-message("Report written to report/Group_X.docx and report/Group_X.pdf")
+message("Report written to report/Group 5.docx and report/Group 5.pdf")
