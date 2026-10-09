@@ -1,7 +1,0 @@
-Log-rank test: chi-square = 31.28, df = 2, p = 1.61e-07
-Call: survfit(formula = Surv(time, DEATH_EVENT) ~ ef_group, data = hf)
-
-                     n events median 0.95LCL 0.95UCL
-ef_group=EF ≤ 30%   93     51    170     111     214
-ef_group=EF 31–40% 126     26     NA      NA      NA
-ef_group=EF > 40%   80     19     NA      NA      NA

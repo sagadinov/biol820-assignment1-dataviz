@@ -17,19 +17,16 @@ time zone: Asia/Aqtobe
 tzcode source: system (glibc)
 
 attached base packages:
-[1] grid      stats     graphics  grDevices utils     datasets  methods  
-[8] base     
+[1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] survival_3.8-12     patchwork_1.3.2     ggplot2_4.0.3      
-[4] tidyr_1.3.2         dplyr_1.2.1         data.table_1.18.6.1
+[1] ggplot2_4.0.3 tidyr_1.3.2   dplyr_1.2.1  
 
 loaded via a namespace (and not attached):
  [1] vctrs_0.7.3        cli_3.6.3          rlang_1.3.0        purrr_1.0.2       
- [5] generics_0.1.4     textshaping_0.4.0  S7_0.2.2           labeling_0.4.3    
- [9] glue_1.8.0         ragg_1.3.3         scales_1.4.0       fansi_1.0.6       
-[13] tibble_3.2.1       lifecycle_1.0.5    compiler_4.4.2     RColorBrewer_1.1-3
-[17] pkgconfig_2.0.3    systemfonts_1.1.0  lattice_0.23-1     farver_2.1.2      
+ [5] generics_0.1.4     textshaping_0.4.0  S7_0.2.2           glue_1.8.0        
+ [9] labeling_0.4.3     ragg_1.3.3         scales_1.4.0       fansi_1.0.6       
+[13] grid_4.4.2         tibble_3.2.1       lifecycle_1.0.5    compiler_4.4.2    
+[17] RColorBrewer_1.1-3 pkgconfig_2.0.3    systemfonts_1.1.0  farver_2.1.2      
 [21] R6_2.5.1           tidyselect_1.2.1   utf8_1.2.4         pillar_1.9.0      
-[25] splines_4.4.2      magrittr_2.0.3     Matrix_1.7-6       withr_3.0.2       
-[29] gtable_0.3.6      
+[25] magrittr_2.0.3     withr_3.0.2        gtable_0.3.6      

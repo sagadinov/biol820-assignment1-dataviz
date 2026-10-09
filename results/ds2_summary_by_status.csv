@@ -1,0 +1,19 @@
+"variable","status","n","mean","sd","median","Q1","Q3"
+"Age","Liver patient",416,46.1538461538462,15.6544118917792,46,34,58
+"Age","No liver disease",167,41.2395209580838,16.9993655377134,40,28,55
+"Alamine_Aminotransferase","Liver patient",416,99.6057692307692,212.768471632553,41,25,76.5
+"Alamine_Aminotransferase","No liver disease",167,33.6526946107784,25.060391669867,27,20,37.5
+"Albumin","Liver patient",416,3.06057692307692,0.786594706709115,3,2.5,3.625
+"Albumin","No liver disease",167,3.34431137724551,0.783689512407644,3.4,2.9,4
+"Albumin_and_Globulin_Ratio","Liver patient",414,0.914178743961353,0.326152531841324,0.9,0.7,1.1
+"Albumin_and_Globulin_Ratio","No liver disease",165,1.02957575757576,0.287252229427659,1,0.9,1.2
+"Alkaline_Phosphotase","Liver patient",416,319.007211538462,268.307910594577,229,186,315.25
+"Alkaline_Phosphotase","No liver disease",167,219.754491017964,140.986262129426,186,161.5,213
+"Aspartate_Aminotransferase","Liver patient",416,137.699519230769,337.389980068126,52.5,29.75,108.75
+"Aspartate_Aminotransferase","No liver disease",167,40.688622754491,36.4116200490694,29,21,43.5
+"Direct_Bilirubin","Liver patient",416,1.92355769230769,3.20690111824574,0.5,0.2,1.8
+"Direct_Bilirubin","No liver disease",167,0.396407185628742,0.519254820045829,0.2,0.2,0.35
+"Total_Bilirubin","Liver patient",416,4.16442307692308,7.14483105123523,1.4,0.8,3.625
+"Total_Bilirubin","No liver disease",167,1.14251497005988,1.00447235957994,0.8,0.7,1.1
+"Total_Protiens","Liver patient",416,6.45913461538461,1.09465876122277,6.55,5.7,7.2
+"Total_Protiens","No liver disease",167,6.54311377245509,1.06304172819956,6.6,5.9,7.3

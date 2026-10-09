@@ -1,0 +1,32 @@
+
+	Pearson's product-moment correlation
+
+data:  liver$Total_Protiens and liver$Albumin
+t = 30.448, df = 581, p-value < 2.2e-16
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ 0.7506414 0.8134654
+sample estimates:
+      cor 
+0.7840533 
+
+
+
+Call:
+lm(formula = Albumin ~ Total_Protiens, data = liver)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-2.70300 -0.26308  0.04028  0.32088  1.36565 
+
+Coefficients:
+               Estimate Std. Error t value Pr(>|t|)    
+(Intercept)    -0.58356    0.12405  -4.704 3.19e-06 ***
+Total_Protiens  0.57463    0.01887  30.448  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4942 on 581 degrees of freedom
+Multiple R-squared:  0.6147,	Adjusted R-squared:  0.6141 
+F-statistic: 927.1 on 1 and 581 DF,  p-value: < 2.2e-16
+
