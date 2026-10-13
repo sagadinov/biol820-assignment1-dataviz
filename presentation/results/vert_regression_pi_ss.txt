@@ -1,0 +1,41 @@
+
+	Pearson's product-moment correlation
+
+data:  vert$pelvic_incidence and vert$sacral_slope
+t = 24.68, df = 308, p-value < 2.2e-16
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ 0.7738114 0.8492567
+sample estimates:
+      cor 
+0.8149587 
+
+
+	Spearman's rank correlation rho
+
+data:  vert$pelvic_incidence and vert$sacral_slope
+S = 989503, p-value < 2.2e-16
+alternative hypothesis: true rho is not equal to 0
+sample estimates:
+     rho 
+0.800709 
+
+
+Call:
+lm(formula = sacral_slope ~ pelvic_incidence, data = vert)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-28.883  -4.476   0.843   4.778  34.473 
+
+Coefficients:
+                 Estimate Std. Error t value Pr(>|t|)    
+(Intercept)       4.55947    1.61741   2.819  0.00513 ** 
+pelvic_incidence  0.63466    0.02572  24.680  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 7.791 on 308 degrees of freedom
+Multiple R-squared:  0.6642,	Adjusted R-squared:  0.6631 
+F-statistic: 609.1 on 1 and 308 DF,  p-value: < 2.2e-16
+

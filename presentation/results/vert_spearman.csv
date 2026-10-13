@@ -1,0 +1,16 @@
+"x","y","rho","p"
+"Pelvic incidence","Pelvic tilt",0.653149956063662,4.38886987672843e-39
+"Pelvic incidence","Lumbar lordosis angle",0.778435013492415,3.00752796402131e-64
+"Pelvic tilt","Lumbar lordosis angle",0.418513830587501,1.41472941820077e-14
+"Pelvic incidence","Sacral slope",0.800708990747039,1.63105156369059e-70
+"Pelvic tilt","Sacral slope",0.123878442265656,0.0292056043539206
+"Lumbar lordosis angle","Sacral slope",0.692864313696378,1.17986923035341e-45
+"Pelvic incidence","Pelvic radius",-0.26664390112842,1.91416054607804e-06
+"Pelvic tilt","Pelvic radius",-0.0069414485341943,0.903117167403164
+"Lumbar lordosis angle","Pelvic radius",-0.134283034138382,0.0180072692657108
+"Sacral slope","Pelvic radius",-0.365484129485794,3.13382609034621e-11
+"Pelvic incidence","Degree of spondylolisthesis",0.670835961675007,6.95527532262878e-42
+"Pelvic tilt","Degree of spondylolisthesis",0.396747257811562,3.95034071745182e-13
+"Lumbar lordosis angle","Degree of spondylolisthesis",0.683634391332116,4.92280200192917e-44
+"Sacral slope","Degree of spondylolisthesis",0.532861854618885,3.88399769107791e-24
+"Pelvic radius","Degree of spondylolisthesis",-0.174325377348215,0.00206627792921869

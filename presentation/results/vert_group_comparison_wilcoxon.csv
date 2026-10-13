@@ -1,0 +1,7 @@
+"variable","median_abnormal","median_normal","W","p"
+"Pelvic incidence",65.275,50.125,15180.5,2.24218015198676e-10
+"Pelvic tilt",18.795,13.485,14680,1.46733702583902e-08
+"Lumbar lordosis angle",56.15,42.64,14581.5,3.16861811292817e-08
+"Sacral slope",44.64,37.06,13346.5,0.000114420058510288
+"Pelvic radius",115.65,123.875,5849,2.90481216726709e-10
+"Degree of spondylolisthesis",31.945,1.155,18195,1.81021141058551e-25
