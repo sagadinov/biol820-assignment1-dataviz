@@ -71,3 +71,25 @@ writeLines(c(capture.output(print(summary(fit))), sprintf("Shapiro-Wilk on resid
              capture.output(print(liver[big$id, c("Total_Protiens", "Albumin", "Albumin_and_Globulin_Ratio", "Dataset")]))),
            file.path(res, "liver_regression_diagnostics.txt"))
 message("liver extras done")
+
+# ---- extra correlation: ALT vs AST (two independently measured enzymes) ----------------
+la <- log10(liver$Alamine_Aminotransferase); ls <- log10(liver$Aspartate_Aminotransferase)
+ct2 <- cor.test(la, ls); rs2 <- cor.test(liver$Alamine_Aminotransferase, liver$Aspartate_Aminotransferase, method = "spearman", exact = FALSE)
+fit2 <- lm(ls ~ la); co2 <- coef(fit2); r22 <- summary(fit2)$r.squared
+writeLines(c(capture.output(print(ct2)), capture.output(print(rs2)), capture.output(print(summary(fit2)))),
+           file.path(res, "liver_regression_alt_ast.txt"))
+fig_aa <- ggplot(liver, aes(Alamine_Aminotransferase, Aspartate_Aminotransferase)) +
+  geom_abline(intercept = 0, slope = 1, linetype = "22", colour = grey_mark) +
+  annotate("text", x = 1500, y = 1500, label = "AST = ALT", hjust = 1, vjust = -0.6, size = 3.4, colour = grey_mark) +
+  geom_smooth(method = "lm", formula = y ~ x, colour = "black", linewidth = 0.8, fill = "grey80") +
+  geom_point(aes(colour = status), size = 1.8, alpha = 0.7) +
+  scale_x_log10(breaks = c(10, 30, 100, 300, 1000, 2000)) + scale_y_log10(breaks = c(10, 30, 100, 300, 1000, 5000)) +
+  scale_colour_manual(values = pal_liver, name = NULL) +
+  labs(x = "ALT (IU/L, log scale)", y = "AST (IU/L, log scale)",
+       title = "AST rises together with ALT: two independent markers of the same liver injury",
+       subtitle = sprintf("Pearson r = %.2f on log10 values (Spearman rho = %.2f), p < 0.001, n = %d\nLeast-squares line: log10 AST = %.2f + %.2f x log10 ALT, R² = %.2f",
+                          ct2$estimate, rs2$estimate, nrow(liver), co2[1], co2[2], r22),
+       caption = "Dashed line: AST = ALT. Points above it have an AST/ALT ratio above 1. Grey band = 95% confidence interval of the line.")
+savep(fig_aa, "liver_fig_scatter_alt_ast", 10, 6.6)
+cat(sprintf("ALT-AST: r = %.3f, rho = %.3f, intercept = %.3f, slope = %.3f, R2 = %.3f, AST>ALT in %.0f%% of patients\n",
+            ct2$estimate, rs2$estimate, co2[1], co2[2], r22, 100 * mean(liver$Aspartate_Aminotransferase > liver$Alamine_Aminotransferase)))

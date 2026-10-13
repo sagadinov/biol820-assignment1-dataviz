@@ -1,0 +1,41 @@
+
+	Pearson's product-moment correlation
+
+data:  la and ls
+t = 37.576, df = 581, p-value < 2.2e-16
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ 0.8162951 0.8638644
+sample estimates:
+      cor 
+0.8417054 
+
+
+	Spearman's rank correlation rho
+
+data:  liver$Alamine_Aminotransferase and liver$Aspartate_Aminotransferase
+S = 7476672, p-value < 2.2e-16
+alternative hypothesis: true rho is not equal to 0
+sample estimates:
+      rho 
+0.7736111 
+
+
+Call:
+lm(formula = ls ~ la)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.09136 -0.16859 -0.02922  0.15446  0.85892 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  0.19893    0.04158   4.784 2.18e-06 ***
+la           0.93253    0.02482  37.576  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.2341 on 581 degrees of freedom
+Multiple R-squared:  0.7085,	Adjusted R-squared:  0.708 
+F-statistic:  1412 on 1 and 581 DF,  p-value: < 2.2e-16
+
